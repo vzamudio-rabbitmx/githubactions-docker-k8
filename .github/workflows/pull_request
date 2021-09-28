@@ -1,0 +1,42 @@
+on:
+  pull_request:
+    branches:
+      - main
+    types: [synchronize, opened, reopened, ready_for_review]
+
+jobs:
+  skip-draft:
+    name: skip draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: fail on draft
+        if: github.event.pull_request.draft == true
+        run: echo "is a draft PR, failing..." && exit 1
+      - name: success
+        run: echo "is not a draft PR"
+
+  tests:
+    needs: skip-draft
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    # it should be node:lts-alpine but fixes: /bin/tar: unrecognized option: posix
+    # https://stackoverflow.com/questions/64184839/github-actions-cachev2-unrecognized-option-posix-in-the-post-job
+    container: node:lts
+    timeout-minutes: 8
+    strategy:
+      matrix:
+        node-version: [14.x, 15.x]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: npm ci
+      - run: npm run build --if-present
+      - run: npm test 
+
+      

@@ -1,0 +1,20 @@
+{
+  "name": "githubactions-docker-k8",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start" : "node ./app.js",
+    "test": "echo \"Test executed ....\" "
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vzamudio-rabbitmx/githubactions-docker-k8/issues"
+  },
+  "homepage": "https://github.com/vzamudio-rabbitmx/githubactions-docker-k8#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
