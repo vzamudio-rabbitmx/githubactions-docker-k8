@@ -36,8 +36,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '14.17'
-      #- name: Install semantic-release extra plugins
-      #  run: npm install --no-save @semantic-release/changelog @semantic-release/git
+      - name: Install semantic-release extra plugins
+        run: npm install --no-save @semantic-release/changelog @semantic-release/git
       - name: Semantic Release
         env:
             GITHUB_TOKEN: ${{ secrets.CUSTOM_TOKEN }}
