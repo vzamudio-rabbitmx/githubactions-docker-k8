@@ -5,7 +5,6 @@ on:
    
 jobs:
   tests:
-    needs: skip-draft
     name: Lint & Test
     runs-on: ubuntu-latest
     # it should be node:lts-alpine but fixes: /bin/tar: unrecognized option: posix
