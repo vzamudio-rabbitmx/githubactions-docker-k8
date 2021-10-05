@@ -16,5 +16,6 @@
   "homepage": "https://github.com/vzamudio-rabbitmx/githubactions-docker-k8#readme",
   "dependencies": {
     "express": "^4.17.1"
-  }
+  },
+  "private": true
 }
