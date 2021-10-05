@@ -40,5 +40,5 @@ jobs:
       #  run: npm install --no-save @semantic-release/changelog @semantic-release/git
       - name: Semantic Release
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.CUSTOM_TOKEN }}
         run: npx semantic-release
