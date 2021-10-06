@@ -1,10 +1,10 @@
 {
   "name": "githubactions-docker-k8",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start" : "node ./app.js",
+    "start": "node ./app.js",
     "test": "echo \"Test executed ....\" "
   },
   "keywords": [],
