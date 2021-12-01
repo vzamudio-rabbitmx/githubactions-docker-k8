@@ -73,6 +73,7 @@ jobs:
       # S3
       REGISTRY: vicontainers
       REPO: githubactions-docker-k8
+      CONTAINER: githubactions-container
     steps:
       - name: Setup SSH connection # name of this step
         uses: webfactory/ssh-agent@v0.5.1 # action which is used
