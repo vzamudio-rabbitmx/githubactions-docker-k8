@@ -1,0 +1,44 @@
+on:
+  push:
+    branches:
+      - main
+   
+jobs:
+  tests:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    # it should be node:lts-alpine but fixes: /bin/tar: unrecognized option: posix
+    # https://stackoverflow.com/questions/64184839/github-actions-cachev2-unrecognized-option-posix-in-the-post-job
+    container: node:lts
+    timeout-minutes: 8
+    strategy:
+      matrix:
+        node-version: [14.x, 15.x]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: npm ci
+      - run: npm run build --if-present
+      - run: npm test 
+# #Release:
+  Release:
+    name: Release
+    needs: [tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.17'
+      - name: Install semantic-release extra plugins
+        run: npm install --no-save @semantic-release/changelog @semantic-release/git @google/semantic-release-replace-plugin
+      - name: Semantic Release
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release

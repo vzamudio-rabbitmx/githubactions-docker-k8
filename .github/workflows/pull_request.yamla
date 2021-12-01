@@ -65,27 +65,4 @@ jobs:
           tags: |
             vicontainers/githubactions-docker-k8:latest
             vicontainers/githubactions-docker-k8:${{ github.sha }}
-  deploy-to-aws:
-    name: deploy-to-aws
-    needs: [docker-build]
-    runs-on: ubuntu-latest
-    env:
-      # S3
-      REGISTRY: vicontainers
-      REPO: githubactions-docker-k8
-    steps:
-      - name: Setup SSH connection # name of this step
-        uses: webfactory/ssh-agent@v0.5.1 # action which is used
-        with:
-          ssh-private-key: ${{ secrets.SSH_KEY }} # provide private key which we added before
-      - name: Adding Known Hosts
-        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts # run shell command which will scan and add hosts
-      - name: Pull latest container
-        run: |
-          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST}} "docker pull ${{env.REGISTRY}}/${{env.REPO}}:latest"
-      - name: Pull latest container
-        run: |
-          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST}} "docker pull ${{env.REGISTRY}}/${{env.REPO}}:latest"
-      - name: Start docker container
-        run: |
-          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST}} "docker run -p 8080:8080 -d --restart unless-stopped --name=${{env.CONTAINER}} ${{env.REGISTRY}}/${{env.REPO}}:latest"
+            
