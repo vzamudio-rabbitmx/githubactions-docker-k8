@@ -1,10 +1,16 @@
+# Copied from https://docs.github.com/en/actions/configuring-and-managing-workflows/creating-postgresql-service-containers
+
+name: CI
+
 on:
   push:
-    branches:
-      - main
-   
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
 jobs:
+  # Label of the container job
   tests:
+    needs: skip-draft
     name: Lint & Test
     runs-on: ubuntu-latest
     # it should be node:lts-alpine but fixes: /bin/tar: unrecognized option: posix
@@ -14,6 +20,7 @@ jobs:
     strategy:
       matrix:
         node-version: [14.x, 15.x]
+
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
@@ -24,7 +31,7 @@ jobs:
         run: npm ci
       - run: npm run build --if-present
       - run: npm test 
-# # Testing ends here # 
+# Testing ends here # 
   docker-build:
     needs: tests
     name: Build Docker Container
@@ -33,6 +40,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: get tag
+        run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -49,10 +58,9 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            vicontainers/githubactions-docker-k8:latest
-            vicontainers/githubactions-docker-k8:${{ github.sha }}
-  deploy-to-aws-staging:
-    name: deploy-to-aws-staging
+            vicontainers/githubactions-docker-k8:${{ env.GIT_TAG }}
+  deploy-to-aws-production:
+    name: deploy-to-aws-production
     needs: [docker-build]
     runs-on: ubuntu-latest
     env:
@@ -66,22 +74,21 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }} # provide private key which we added before
       - name: Adding Known Hosts
-        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts # run shell command which will scan and add hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST_PRODUCTION }} >> ~/.ssh/known_hosts # run shell command which will scan and add hosts
       - name: Pull latest container
         run: |
-          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST}} "docker pull ${{env.REGISTRY}}/${{env.REPO}}:latest"
+          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST_PRODUCTION}} "docker pull ${{env.REGISTRY}}/${{env.REPO}}:${{ env.GIT_TAG }}"
       - name: Stop deployed container
         continue-on-error: true
         run: |
-          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST}} "docker stop ${{env.CONTAINER}}"
+          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST_PRODUCTION}} "docker stop ${{env.CONTAINER}}"
       - name: Remove deployed container
         continue-on-error: true
         run: |
-          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST}} "docker rm ${{env.CONTAINER}}"
+          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST_PRODUCTION}} "docker rm ${{env.CONTAINER}}"
       - name: Pull latest container
         run: |
-          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST}} "docker pull ${{env.REGISTRY}}/${{env.REPO}}:latest"
+          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST_PRODUCTION}} "docker pull ${{env.REGISTRY}}/${{env.REPO}}:${{ env.GIT_TAG }}"
       - name: Start docker container
         run: |
-          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST}} "docker run -p 3000:3000 -d --restart unless-stopped --name=${{env.CONTAINER}} ${{env.REGISTRY}}/${{env.REPO}}:latest"
-
+          ssh ${{secrets.SSH_USER}}@${{secrets.SSH_HOST_PRODUCTION}} "docker run -p 3000:3000 -d --restart unless-stopped --name=${{env.CONTAINER}} ${{env.REGISTRY}}/${{env.REPO}}:${{ env.GIT_TAG }}"
